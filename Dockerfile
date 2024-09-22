@@ -1,19 +1,27 @@
 FROM python:3.8-slim-buster
 
-# Update and install necessary dependencies
-RUN apt update -y && apt install -y awscli build-essential libpq-dev
+# Install necessary system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    python3-dev \
+    libatlas-base-dev \
+    gfortran \
+    awscli
 
 # Set the working directory
 WORKDIR /app
 
-# Copy only the requirements file first to leverage Docker cache efficiently
+# Copy the requirements.txt before the rest of the code to leverage Docker cache
 COPY requirements.txt /app/
 
-# Upgrade pip and install Python dependencies
+# Upgrade pip to the latest version
 RUN pip install --upgrade pip
+
+# Install Python dependencies
 RUN pip install -r requirements.txt
 
-# Copy the rest of the app files into the container
+# Copy the rest of the code into the container
 COPY . /app
 
 # Set the default command to run the app
