@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  endtoendmlproject:
+    image: endtoendmlproject
+    build:
+      context: .
+      dockerfile: ./Dockerfile
