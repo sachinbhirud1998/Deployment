@@ -12,14 +12,12 @@ RUN apt-get update && apt-get install -y \
 # Set the working directory
 WORKDIR /app
 
-# Copy the requirements.txt before the rest of the code to leverage Docker cache
+# Copy the requirements.txt first for caching
 COPY requirements.txt /app/
 
-# Upgrade pip to the latest version
+# Upgrade pip and install dependencies
 RUN pip install --upgrade pip
-
-# Install Python dependencies
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt --verbose  # Verbose for detailed output
 
 # Copy the rest of the code into the container
 COPY . /app
