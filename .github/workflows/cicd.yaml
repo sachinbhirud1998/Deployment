@@ -15,10 +15,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Lint code
+      - name: Lint Code
         run: echo "Linting repository"
 
-      - name: Run unit tests
+      - name: Run Unit Tests
         run: echo "Running unit tests"
 
   build-and-push-ecr-image:
@@ -34,8 +34,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq unzip
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2  # Updated version
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -43,15 +43,22 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2  # Updated version
 
-      - name: Build, tag, and push image to Amazon ECR
+      - name: Debug ECR Values
+        run: |
+          echo "ECR Registry: ${{ steps.login-ecr.outputs.registry }}"
+          echo "ECR Repository: ${{ secrets.ECR_REPOSITORY_NAME }}"
+
+      - name: Build, Tag, and Push Image to Amazon ECR
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
           IMAGE_TAG: latest
         run: |
+          echo "Building image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"  # Debugging line
+          echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV  # Enable BuildKit
           docker build -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
@@ -62,20 +69,21 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Pull latest image from ECR
+      - name: Pull Latest Image from ECR
         run: |
           IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
           echo "Pulling image: $IMAGE_URI"  # Debugging line
           docker pull "$IMAGE_URI"
 
-      - name: Stop and remove existing container (if running)
+      - name: Stop and Remove Existing Container (if Running)
         run: |
           docker ps -q --filter "name=cnncls" | grep -q . && docker stop cnncls && docker rm -fv cnncls || echo "No running container to stop"
 
-      - name: Run Docker Image to serve users
+      - name: Run Docker Image to Serve Users
         run: |
           docker run -d -p 8080:8080 --name=cnncls \
             -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
             -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
             -e AWS_REGION=${{ secrets.AWS_REGION }} \
-            "$IMAGE_URI" make changes here keep changes minimum
+            "$IMAGE_URI"
+
