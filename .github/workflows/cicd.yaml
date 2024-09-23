@@ -15,10 +15,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Lint Code
+      - name: Lint code
         run: echo "Linting repository"
 
-      - name: Run Unit Tests
+      - name: Run unit tests
         run: echo "Running unit tests"
 
   build-and-push-ecr-image:
@@ -34,7 +34,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq unzip
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -45,19 +45,13 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Debug ECR Values
-        run: |
-          echo "ECR Registry: ${{ steps.login-ecr.outputs.registry }}"
-          echo "ECR Repository: ${{ secrets.ECR_REPOSITORY_NAME }}"
-
-      - name: Build, Tag, and Push Image to Amazon ECR
+      - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
           IMAGE_TAG: latest
         run: |
-          echo "Building image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"  # Debugging line
           docker build -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
@@ -68,20 +62,20 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Pull Latest Image from ECR
+      - name: Pull latest image from ECR
         run: |
           IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
           echo "Pulling image: $IMAGE_URI"  # Debugging line
           docker pull "$IMAGE_URI"
 
-      - name: Stop and Remove Existing Container (if Running)
+      - name: Stop and remove existing container (if running)
         run: |
           docker ps -q --filter "name=cnncls" | grep -q . && docker stop cnncls && docker rm -fv cnncls || echo "No running container to stop"
 
-      - name: Run Docker Image to Serve Users
+      - name: Run Docker Image to serve users
         run: |
           docker run -d -p 8080:8080 --name=cnncls \
             -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
             -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
             -e AWS_REGION=${{ secrets.AWS_REGION }} \
-            "$IMAGE_URI"
+            "$IMAGE_URI" make changes here keep changes minimum
