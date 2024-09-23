@@ -39,7 +39,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ap-south-1  # Specify the region directly
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -48,7 +48,7 @@ jobs:
       - name: Build, Tag, and Push Image to Amazon ECR
         id: build-image
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REGISTRY: 565709307194.dkr.ecr.ap-south-1.amazonaws.com  # Updated to your registry
           ECR_REPOSITORY: deployment1  # Updated to your repository name
           IMAGE_TAG: latest
         run: |
@@ -65,7 +65,7 @@ jobs:
 
       - name: Pull Latest Image from ECR
         run: |
-          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/deployment1:latest"  # Updated to your repository name
+          IMAGE_URI="565709307194.dkr.ecr.ap-south-1.amazonaws.com/deployment1:latest"  # Directly using your image URI
           echo "Pulling image: $IMAGE_URI"  # Debugging line
           docker pull "$IMAGE_URI"
 
