@@ -35,7 +35,7 @@ jobs:
           sudo apt-get install -y jq unzip
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2  # Updated version
+        uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -43,22 +43,16 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2  # Updated version
-
-      - name: Debug ECR Values
-        run: |
-          echo "ECR Registry: ${{ steps.login-ecr.outputs.registry }}"
-          echo "ECR Repository: ${{ secrets.ECR_REPOSITORY_NAME }}"
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build, Tag, and Push Image to Amazon ECR
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
+          ECR_REPOSITORY: deployment1  # Updated to your repository name
           IMAGE_TAG: latest
         run: |
           echo "Building image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"  # Debugging line
-          echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV  # Enable BuildKit
           docker build -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
@@ -71,7 +65,7 @@ jobs:
 
       - name: Pull Latest Image from ECR
         run: |
-          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest"
+          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/deployment1:latest"  # Updated to your repository name
           echo "Pulling image: $IMAGE_URI"  # Debugging line
           docker pull "$IMAGE_URI"
 
@@ -86,4 +80,3 @@ jobs:
             -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
             -e AWS_REGION=${{ secrets.AWS_REGION }} \
             "$IMAGE_URI"
-
