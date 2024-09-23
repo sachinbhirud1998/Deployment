@@ -71,15 +71,17 @@ jobs:
 
       - name: Stop and Remove Existing Container (if Running)
         run: |
-          docker ps -q --filter "name=cnncls" | grep -q . && docker stop cnncls && docker rm -fv cnncls || echo "No running container to stop"
+          if [ "$(docker ps -q --filter "name=cnncls")" ]; then
+              docker stop cnncls
+              docker rm -fv cnncls
+          else
+              echo "No running container to stop"
+          fi
 
-            - name: Run Docker Image to Serve Users
-              run: |
-          IMAGE_URI="565709307194.dkr.ecr.ap-south-1.amazonaws.com/deployment1:latest"  # Direct image URI
-          echo "Running Docker image: $IMAGE_URI"  # Debugging line
+      - name: Run Docker Image to Serve Users
+        run: |
           docker run -d -p 8080:8080 --name=cnncls \
             -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
             -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
             -e AWS_REGION=${{ secrets.AWS_REGION }} \
             "$IMAGE_URI"
-
