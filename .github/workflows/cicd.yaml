@@ -73,8 +73,8 @@ jobs:
         run: |
           docker ps -q --filter "name=cnncls" | grep -q . && docker stop cnncls && docker rm -fv cnncls || echo "No running container to stop"
 
-      - name: Run Docker Image to Serve Users
-        run: |
+            - name: Run Docker Image to Serve Users
+              run: |
           IMAGE_URI="565709307194.dkr.ecr.ap-south-1.amazonaws.com/deployment1:latest"  # Direct image URI
           echo "Running Docker image: $IMAGE_URI"  # Debugging line
           docker run -d -p 8080:8080 --name=cnncls \
@@ -82,3 +82,4 @@ jobs:
             -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
             -e AWS_REGION=${{ secrets.AWS_REGION }} \
             "$IMAGE_URI"
+
